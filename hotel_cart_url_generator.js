@@ -63,99 +63,43 @@ function validateServiceData(services) {
     }));
 }
 
-// Function to generate a hotel cart URL from a config object
-function generateHotelCartURL(config) {
+
+// Function to generate a single URL for multiple room configurations
+function generateMultiRoomURL(roomConfigs, baseConfig) {
   const {
     baseUrl,
     token,
-    actionType,
-    ajaxMode,
-    productId,
-    id_product,
-    dateFrom,
-    dateTo,
-    rooms,
-    occupancy,
-    services,
-    serviceProducts,
-  } = config;
+    actionType
+  } = baseConfig;
 
-  const finalProductId = productId || id_product;
-  const finalOccupancy = rooms || occupancy;
-  const finalServices = services || serviceProducts;
-
-  // Build base URL
-  let url = `${baseUrl}?controller=cart&${actionType}=1&id_product=${finalProductId}&token=${token}`;
-
-  // Add AJAX parameter if enabled
-  if (ajaxMode) {
-    url += '&ajax=1';
-  }
-
-  // For "add" actions, include dates, occupancy, and services
+  const params = new URLSearchParams();
+  params.append('controller', 'cart');
   if (actionType === 'add') {
-    url += `&dateFrom=${dateFrom}&dateTo=${dateTo}`;
-
-    const validatedOccupancy = validateRoomData(finalOccupancy);
-    const occupancyEncoded = encodeURIComponent(JSON.stringify(validatedOccupancy));
-    url += `&occupancy=${occupancyEncoded}`;
-
-    const validatedServices = validateServiceData(finalServices);
-    if (validatedServices.length > 0) {
-      const serviceProductsEncoded = encodeURIComponent(JSON.stringify(validatedServices));
-      url += `&serviceProducts=${serviceProductsEncoded}`;
-    }
+    params.append('add', '1');
+  } else if (actionType === 'delete') {
+    params.append('delete', '1');
   }
+  params.append('token', token);
 
-  return url;
-}
+  roomConfigs.forEach((room, index) => {
+    params.append(`booking[${index}][id_product]`, room.id_product);
+    if (room.dateFrom && room.dateTo) {
+      params.append(`booking[${index}][dateFrom]`, room.dateFrom);
+      params.append(`booking[${index}][dateTo]`, room.dateTo);
+    }
 
-// Function to generate multiple URLs from room configurations
-function generateMultipleRoomURLs(roomConfigs, baseConfig) {
-  return roomConfigs.map((roomConfig, index) => {
-    const combinedConfig = { ...baseConfig, ...roomConfig };
-    const url = generateHotelCartURL(combinedConfig);
+    const validatedOccupancy = validateRoomData(room.occupancy);
+    params.append(`booking[${index}][occupancy]`, JSON.stringify(validatedOccupancy));
 
-    const occupancyDetails = roomConfig.occupancy.map(o => `${o.adults} adults, ${o.children} children`).join('; ');
-    const description = `Room Type ${roomConfig.id_product} - ${roomConfig.occupancy.length} room(s) (${occupancyDetails})`;
-
-    return {
-      step: index + 1,
-      roomTypeId: roomConfig.id_product,
-      dateFrom: roomConfig.dateFrom,
-      dateTo: roomConfig.dateTo,
-      occupancy: roomConfig.occupancy,
-      serviceProducts: roomConfig.serviceProducts || [],
-      url: url,
-      description: description
-    };
+    const validatedServices = validateServiceData(room.serviceProducts);
+    if (validatedServices.length > 0) {
+      params.append(`booking[${index}][serviceProducts]`, JSON.stringify(validatedServices));
+    }
   });
+
+  return `${baseUrl}?${params.toString()}`;
 }
 
-// Function to generate multiple URLs for different room types
-function generateRoomTypeURLs(roomTypeConfigs, baseConfig) {
-  return roomTypeConfigs.map((roomTypeConfig, index) => {
-    const config = {
-      ...baseConfig,
-      productId: roomTypeConfig.roomTypeId,
-      rooms: roomTypeConfig.rooms,
-      services: roomTypeConfig.services || [],
-      // Assuming dates are part of the baseConfig or roomTypeConfig
-      dateFrom: roomTypeConfig.dateFrom || baseConfig.dateFrom,
-      dateTo: roomTypeConfig.dateTo || baseConfig.dateTo,
-    };
-
-    const url = generateHotelCartURL(config);
-
-    return {
-      step: index + 1,
-      roomTypeId: roomTypeConfig.roomTypeId,
-      roomCount: roomTypeConfig.rooms.length,
-      url: url,
-      description: roomTypeConfig.description || `Room Type ${roomTypeConfig.roomTypeId}`
-    };
-  });
-}
 
 // Function to decode URL parameters for debugging
 function decodeURLParameters(url) {
@@ -216,15 +160,15 @@ try {
 
   // Handle room configurations array
   if (finalConfig.roomConfigs && finalConfig.roomConfigs.length > 0) {
-    const multiRoomURLs = generateMultipleRoomURLs(finalConfig.roomConfigs, finalConfig);
+    const multiRoomURL = generateMultiRoomURL(finalConfig.roomConfigs, finalConfig);
 
     return [{
       json: {
         success: true,
-        type: 'multi-room-booking',
-        urls: multiRoomURLs,
-        totalSteps: multiRoomURLs.length,
-        instructions: "Execute URLs in the order provided to book multiple rooms/services",
+        type: 'multi-room-single-url-booking',
+        url: multiRoomURL,
+        totalSteps: 1,
+        instructions: "Execute this URL to book all rooms and services at once.",
         config: finalConfig
       }
     }];
@@ -250,44 +194,10 @@ try {
   }];
 }
 
-// Helper functions for specific use cases (can be called separately)
-
-// Function to create a simple booking URL (minimal parameters)
-function createSimpleBookingURL(roomTypeId, checkIn, checkOut, adults = 2, children = 0) {
-  const config = {
-    baseUrl: "https://parksuiteshotel.aiartexpo.art/index.php",
-    token: "b99d700a1519be7LHFLKKJ794f59ca096b213cc",
-    productId: roomTypeId,
-    dateFrom: checkIn,
-    dateTo: checkOut,
-    actionType: "add",
-    rooms: [{ adults, children, child_ages: [] }],
-    services: []
-  };
-
-  return generateHotelCartURL(config);
-}
-
-// Function to create a delete URL
-function createDeleteURL(roomTypeId) {
-  const config = {
-    baseUrl: "https://parksuiteshotel.aiartexpo.art/index.php",
-    token: "b99d700a1519be7LHFLKKJ794f59ca096b213cc",
-    productId: roomTypeId,
-    actionType: "delete",
-    ajaxMode: true
-  };
-
-  return generateHotelCartURL(config);
-}
-
 // Export functions for use in other nodes (if needed)
 // In n8n, you might want to store these in a global variable
 // $node.context().global.hotelCartFunctions = {
-//   generateHotelCartURL,
-//   createSimpleBookingURL,
-//   createDeleteURL,
-//   generateRoomTypeURLs,
+//   generateMultiRoomURL,
 //   presets
 // };
 
@@ -459,27 +369,12 @@ EXPECTED OUTPUTS:
 Each test will return:
 {
   "success": true,
-  "type": "multi-room-booking",
-  "urls": [
-    {
-      "step": 1,
-      "roomTypeId": 2,
-      "dateFrom": "2025-12-01",
-      "dateTo": "2025-12-05",
-      "occupancy": [...],
-      "serviceProducts": [...],
-      "url": "https://parksuiteshotel.aiartexpo.art/index.php?controller=cart&add=1&id_product=2&token=...",
-      "description": "Room Type 2 - 1 room(s)"
-    },
-    // ... more URLs for each room configuration
-  ],
-  "totalSteps": 2,
-  "instructions": "Execute URLs in the order provided to book multiple rooms/services"
+  "type": "multi-room-single-url-booking",
+  "url": "https://parksuiteshotel.aiartexpo.art/index.php?controller=cart&add=1&token=...&booking[0][id_product]=...",
+  "totalSteps": 1,
+  "instructions": "Execute this URL to book all rooms and services at once."
 }
 
 WORKFLOW EXECUTION:
-1. Use Split in Batches node to process URLs one by one
-2. HTTP Request node to execute each URL
-3. Wait node between requests (optional)
-4. Merge node to collect all responses
+1. HTTP Request node to execute the generated URL.
 */
