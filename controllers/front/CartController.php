@@ -69,7 +69,7 @@ class CartControllerCore extends FrontController
     public function postProcess()
     {
         // Update the cart ONLY if $this->cookies are available, in order to avoid ghost carts created by bots
-        if ($this->context->cookie->exists() && !$this->errors && !($this->context->customer->isLogged() && !$this->isTokenValid())) {
+        if ($this->context->cookie->exists() && !$this->errors) {
             if (Tools::getIsset('add') || Tools::getIsset('update')) {
                 $this->processChangeProductInCart();
                 CheckoutProcess::refreshCheckoutProcess();
