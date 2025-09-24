@@ -231,7 +231,23 @@
                 {/if}
                 <tr class="cart_total_tax">
                     <td colspan="{$col_span_subtotal}" class="text-right">{l s='Tax'}</td>
-                    <td colspan="2" class="price" id="total_tax">{displayPrice price=$total_tax}</td>
+                    <td colspan="2" class="price" id="total_tax">
+                        {if isset($summary.tax_breakdown) && $summary.tax_breakdown}
+                            {foreach from=$summary.tax_breakdown item=tax}
+                                <div>
+                                    <span>{$tax.name}</span>
+                                    <span>{displayPrice price=$tax.amount}</span>
+                                </div>
+                            {/foreach}
+                            <hr style="margin: 5px 0;"/>
+                            <div>
+                                <strong>{l s='Total Tax'}</strong>
+                                <strong>{displayPrice price=$total_tax}</strong>
+                            </div>
+                        {else}
+                            {displayPrice price=$total_tax}
+                        {/if}
+                    </td>
                 </tr>
             {/if}
             <tr class="cart_total_price">
