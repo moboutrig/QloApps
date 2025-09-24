@@ -95,7 +95,11 @@
 						</td>
 					{/if}
 					<td class="white">
-						{$line.rate} %
+						{if isset($line.type) && $line.type == Tax::TAX_TYPE_PER_PERSON_PER_NIGHT}
+							{displayPrice currency=$order->id_currency price=$line.amount}
+						{else}
+							{$line.rate} %
+						{/if}
 					</td>
 
 					{if $display_tax_bases_in_breakdowns}
