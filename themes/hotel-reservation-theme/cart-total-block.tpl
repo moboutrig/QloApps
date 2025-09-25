@@ -63,25 +63,45 @@
         </p>
     {/if}
     {if $convenience_fee_wt}
-        <p>
-            <span>
-                {l s='Convenience Fees'}
-                {if $display_tax_label}
-                    {if $use_taxes && $priceDisplay == 0}
-                        {l s='(tax incl)'}
-                    {else}
-                        {l s='(tax excl)'}
+        {if isset($convenience_fee_details) && $convenience_fee_details}
+            {foreach from=$convenience_fee_details item=fee}
+                <p>
+                    <span>
+                        {$fee.name|escape:'html':'UTF-8'}
+                        {if $display_tax_label}
+                            {if $use_taxes && $priceDisplay == 0}
+                                {l s='(tax incl)'}
+                            {else}
+                                {l s='(tax excl)'}
+                            {/if}
+                        {/if}
+                    </span>
+                    <span class="cart_total_values">
+                        {$fee.price}
+                    </span>
+                </p>
+            {/foreach}
+        {else}
+            <p>
+                <span>
+                    {l s='Convenience Fees'}
+                    {if $display_tax_label}
+                        {if $use_taxes && $priceDisplay == 0}
+                            {l s='(tax incl)'}
+                        {else}
+                            {l s='(tax excl)'}
+                        {/if}
                     {/if}
+                </span>
+                <span class="cart_total_values">
+                {if $use_taxes && $priceDisplay == 0}
+                    {displayPrice price=$convenience_fee_wt}
+                {else}
+                    {displayPrice price=$convenience_fee}
                 {/if}
-            </span>
-            <span class="cart_total_values">
-            {if $use_taxes && $priceDisplay == 0}
-                {displayPrice price=$convenience_fee_wt}
-            {else}
-                {displayPrice price=$convenience_fee}
-            {/if}
-            </span>
-        </p>
+                </span>
+            </p>
+        {/if}
     {/if}
     {block name='displayBeforeCartTotalTax'}
         {hook h='displayBeforeCartTotalTax'}
