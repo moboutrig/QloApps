@@ -3745,33 +3745,6 @@ class CartCore extends ObjectModel
         return $obj->checkValidity($context);
     }
 
-    public function getConvenienceFeeProductsDetails()
-    {
-        $convenienceFeeProducts = array();
-        $products = $this->getProducts();
-        if ($products) {
-            $priceDisplay = Group::getPriceDisplayMethod(Group::getCurrent()->id);
-            foreach ($products as $product) {
-                if (isset($product['selling_preference_type'])
-                    && $product['selling_preference_type'] == Product::SELLING_PREFERENCE_WITH_ROOM_TYPE
-                    && isset($product['price_addition_type'])
-                    && $product['price_addition_type'] == Product::PRICE_ADDITION_TYPE_INDEPENDENT
-                ) {
-                    if ($priceDisplay) {
-                        $price = Tools::displayPrice($product['total']);
-                    } else {
-                        $price = Tools::displayPrice($product['total_wt']);
-                    }
-                    $convenienceFeeProducts[] = array(
-                        'name' => $product['name'],
-                        'price' => $price,
-                    );
-                }
-            }
-        }
-        return $convenienceFeeProducts;
-    }
-
     /**
     * Return useful informations for cart
     *
@@ -3986,7 +3959,6 @@ class CartCore extends ObjectModel
             'convenience_fee_wt' => $convenience_fee_wt,
             'convenience_fee' => $convenience_fee,
             'convenience_fee_tax' => $convenience_fee_tax,
-            'convenience_fee_details' => $this->getConvenienceFeeProductsDetails(),
             'total_standalone_service_products_wt' => $total_standalone_service_products_wt,
             'total_standalone_service_products' => $total_standalone_service_products,
             'total_extra_demands_wt' => $total_demands_wt,
