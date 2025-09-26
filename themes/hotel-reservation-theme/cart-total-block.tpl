@@ -62,35 +62,50 @@
             </span>
         </p>
     {/if}
-    {if $convenience_fee_wt}
-        <p>
-            <span>
-                {l s='Convenience Fees'}
-                {if $display_tax_label}
-                    {if $use_taxes && $priceDisplay == 0}
-                        {l s='(tax incl)'}
-                    {else}
-                        {l s='(tax excl)'}
+    {if isset($fee_products) && $fee_products}
+        <br>
+        {foreach from=$fee_products item=fee}
+            <p>
+                <span>
+                    {$fee.name|escape:'html':'UTF-8'}
+                    {if $display_tax_label}
+                        {if $use_taxes && $priceDisplay == 0}
+                            {l s='(tax incl.)'}
+                        {else}
+                            {l s='(tax excl.)'}
+                        {/if}
                     {/if}
-                {/if}
-            </span>
-            <span class="cart_total_values">
-            {if $use_taxes && $priceDisplay == 0}
-                {displayPrice price=$convenience_fee_wt}
-            {else}
-                {displayPrice price=$convenience_fee}
-            {/if}
-            </span>
-        </p>
+                </span>
+                <span class="cart_total_values">
+                    {if $use_taxes && $priceDisplay == 0}
+                        {displayPrice price=$fee.total_wt}
+                    {else}
+                        {displayPrice price=$fee.total}
+                    {/if}
+                </span>
+            </p>
+        {/foreach}
     {/if}
+
     {block name='displayBeforeCartTotalTax'}
         {hook h='displayBeforeCartTotalTax'}
     {/block}
+
     {if $show_taxes}
-        <p class="cart_total_tax">
-            <span>{l s='Total tax'}</span>
-            <span class="cart_total_values">{displayPrice price=($total_tax_without_discount)}</span>
-        </p>
+        <br>
+        {if isset($taxes_details) && $taxes_details}
+            {foreach from=$taxes_details item=tax_detail}
+            <p class="cart_total_tax">
+                <span>{$tax_detail.name} ({$tax_detail.rate}%)</span>
+                <span class="cart_total_values">{displayPrice price=$tax_detail.amount}</span>
+            </p>
+            {/foreach}
+        {else}
+            <p class="cart_total_tax">
+                <span>{l s='Total tax'}</span>
+                <span class="cart_total_values">{displayPrice price=($total_tax_without_discount)}</span>
+            </p>
+        {/if}
     {/if}
     <p class="total_discount_block {if $total_discounts == 0}unvisible{/if}">
         <span>

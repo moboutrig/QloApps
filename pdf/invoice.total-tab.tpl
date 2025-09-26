@@ -54,15 +54,17 @@
 			</td>
 		</tr>
 	{/if}
-	{if isset($footer.total_convenience_fee_te) && $footer.total_convenience_fee_te}
-		<tr>
-			<td class="grey" width="70%">
-				{l s='Convenience Fee (tax excl.)' pdf='true'}
-			</td>
-			<td class="white" width="30%">
-				{displayPrice currency=$order->id_currency price=$footer.total_convenience_fee_te}
-			</td>
-		</tr>
+	{if isset($fee_products)}
+		{foreach from=$fee_products item=fee}
+			<tr>
+				<td class="grey" width="70%">
+					{$fee.product_name|escape:'html':'UTF-8'} {l s='(tax excl.)' pdf='true'}
+				</td>
+				<td class="white" width="30%">
+					{displayPrice currency=$order->id_currency price=$fee.total_price_tax_excl}
+				</td>
+			</tr>
+		{/foreach}
 	{/if}
 	{* {if isset($footer.product_taxes) && $footer.product_taxes}
 		<tr>

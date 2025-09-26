@@ -134,22 +134,38 @@
 													</span>
 											</div>
 											{/if} --><!-- commented by webkul unnecessary data -->
-											{block name='blockcart_shopping_cart_total_tax'}
-												{if $show_tax && $use_tax}
+											{* Fee Products *}
+											{assign var=fee_products value=$cart->getFeeProducts()}
+											{if $fee_products}
+												{foreach from=$fee_products item=fee}
 													<div class="cart-prices-line">
-														<span class="price cart_block_tax_cost ajax_cart_tax_cost">{$tax_cost}</span>
-														<span>{l s='Tax' mod='blockcart'}</span>
+														<span>{$fee.name|escape:'html':'UTF-8'}</span>
+														<span class="price">
+															{if $priceDisplay == 1}
+																{convertPrice price=$fee.total}
+															{else}
+																{convertPrice price=$fee.total_wt}
+															{/if}
+														</span>
 													</div>
-												{/if}
-											{/block}
-											{block name='blockcart_shopping_cart_total_convenience_fee'}
-												{if isset($total_convenience_fee)}
-													<div class="cart-prices-line">
-														<span class="price cart_block_convenience_fee ajax_cart_convenience_fee">{convertPrice price=$total_convenience_fee}</span>
-														<span class="price">{l s='Convenience Fees' mod='blockcart'}</strong>
-													</div>
-												{/if}
-											{/block}
+												{/foreach}
+											{/if}
+
+											{* Taxes Details *}
+											{assign var=taxes_details value=$cart->getTaxesDetails()}
+											{if $show_tax && $taxes_details}
+												{foreach from=$taxes_details item=tax_detail}
+												<div class="cart-prices-line">
+													<span>{$tax_detail.name}</span>
+													<span class="price cart_block_tax_cost ajax_cart_tax_cost">{convertPrice price=$tax_detail.amount}</span>
+												</div>
+												{/foreach}
+											{else if $show_tax && $use_tax}
+												<div class="cart-prices-line">
+													<span class="price cart_block_tax_cost ajax_cart_tax_cost">{$tax_cost}</span>
+													<span>{l s='Tax' mod='blockcart'}</span>
+												</div>
+											{/if}
 											{block name='blockcart_shopping_cart_total'}
 												<div class="cart-prices-line last-line">
 													<span class="price cart_block_total ajax_block_cart_total" total_cart_price="{$totalToPay}">{$total}</span>
@@ -325,24 +341,35 @@
 								</span>
 							</div> -->
 							{block name='blockcart_layer_cart_total_convenience_fee'}
-								{if isset($total_convenience_fee)}
-									<div class="layer_cart_row">
-										<strong class="dark">
-											{l s='Convenience Fees' mod='blockcart'}
-											{if $display_tax_label}
-												{if $priceDisplay == 1}
-													{l s='(tax excl.)' mod='blockcart'}
-												{else}
-													{l s='(tax incl.)' mod='blockcart'}
+								{* Fee Products *}
+								{assign var=fee_products value=$cart->getFeeProducts()}
+								{if $fee_products}
+									{foreach from=$fee_products item=fee}
+										<div class="layer_cart_row">
+											<strong class="dark">
+												{$fee.name|escape:'html':'UTF-8'}
+												{if $display_tax_label}
+													{if $priceDisplay == 1}{l s='(tax excl.)' mod='blockcart'}{else}{l s='(tax incl.)' mod='blockcart'}{/if}
 												{/if}
-											{/if}
-										</strong>
-										<span class="price ajax_cart_convenience_fee pull-right">{convertPrice price=$total_convenience_fee}</span>
-									</div>
+											</strong>
+											<span class="price pull-right">
+												{if $priceDisplay == 1}{convertPrice price=$fee.total}{else}{convertPrice price=$fee.total_wt}{/if}
+											</span>
+										</div>
+									{/foreach}
 								{/if}
 							{/block}
 							{block name='blockcart_layer_cart_total_tax'}
-								{if $show_tax && $use_tax}
+								{* Taxes Details *}
+								{assign var=taxes_details value=$cart->getTaxesDetails()}
+								{if $show_tax && $taxes_details}
+									{foreach from=$taxes_details item=tax_detail}
+										<div class="layer_cart_row">
+											<strong class="dark">{$tax_detail.name}</strong>
+											<span class="price cart_block_tax_cost ajax_cart_tax_cost pull-right">{convertPrice price=$tax_detail.amount}</span>
+										</div>
+									{/foreach}
+								{else if $show_tax && $use_tax}
 									<div class="layer_cart_row">
 										<strong class="dark">{l s='Tax' mod='blockcart'}</strong>
 										<span class="price cart_block_tax_cost ajax_cart_tax_cost pull-right">{$tax_cost}</span>
